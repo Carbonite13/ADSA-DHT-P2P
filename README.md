@@ -109,5 +109,3 @@ The UI is built with **React** for true modularity:
 3. **Pydantic Validation**: Explore `main.py` to see how Pydantic ensures data integrity.
 
 ---
-
-*Made with ❤️ by D4t1_1R4*
