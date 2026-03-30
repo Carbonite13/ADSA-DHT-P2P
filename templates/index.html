@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>DHT_SIMULATOR</title>
+
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            background: #0B0D11;
+            color: #E5E7EB;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 12px;
+            letter-spacing: 2px;
+        }
+
+        /* Stats */
+        .stats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            text-align: right;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        /* Bottom Controls */
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid #26292F;
+        }
+
+        input {
+            background: transparent;
+            border: none;
+            color: white;
+            outline: none;
+            width: 120px;
+        }
+
+        button {
+            background: #3B82F6;
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        /* Canvas */
+        .main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        svg {
+            width: 500px;
+            height: 500px;
+        }
+
+        .ring {
+            fill: none;
+            stroke: #26292F;
+            stroke-width: 1;
+        }
+
+        .node {
+            fill: #ffffff;
+        }
+
+        .file {
+            fill: #555;
+        }
+
+        .highlight {
+            fill: #3B82F6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">DHT_SIMULATOR // v1.0</div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="main">
+        <svg id="canvas"></svg>
+    </div>
+
+    <div class="controls">
+
+        <!-- Add Node -->
+        <input id="nodeName" placeholder="+ node">
+        <button onclick="addNode()">Add</button>
+
+        <!-- Remove Node -->
+        <input id="removeNodeName" placeholder="- node">
+        <button onclick="removeNode()">Drop</button>
+
+        <!-- Upload -->
+        <input id="fileName" placeholder="file">
+        <input id="peerName" placeholder="peer">
+        <button onclick="upload()">Upload</button>
+
+        <!-- Delete File -->
+        <input id="deleteFile" placeholder="delete file">
+        <button onclick="deleteFile()">Delete</button>
+
+        <!-- Search -->
+        <input id="searchKey" placeholder="find key">
+        <button onclick="search()">Find</button>
+
+    </div>
+
+    <script>
+        const API = "http://127.0.0.1:5000";
+
+        // Draw based on true backend DHT angles
+        function draw(data, highlightKey = null) {
+            const svg = document.getElementById("canvas");
+            svg.innerHTML = "";
+
+            const cx = 250, cy = 250, r = 180;
+
+            // ring
+            svg.innerHTML += `<circle cx="${cx}" cy="${cy}" r="${r}" class="ring"/>`;
+
+            let nodeCount = 0;
+            let keyCount = 0;
+
+            for (let nodeName in data) {
+                nodeCount++;
+                let nodeData = data[nodeName];
+                let a = (nodeData.angle) * Math.PI / 180;
+
+                let x = cx + r * Math.cos(a);
+                let y = cy + r * Math.sin(a);
+
+                svg.innerHTML += `<circle cx="${x}" cy="${y}" r="5" class="node"/>`;
+                svg.innerHTML += `<text x="${x + 8}" y="${y + 4}" fill="white" font-size="10">${nodeName}</text>`;
+
+                nodeData.files.forEach(fileObj => {
+                    keyCount++;
+                    let fa = (fileObj.angle) * Math.PI / 180;
+
+                    let fx = cx + r * Math.cos(fa);
+                    let fy = cy + r * Math.sin(fa);
+
+                    let cls = (fileObj.name === highlightKey) ? "highlight" : "file";
+
+                    svg.innerHTML += `<circle cx="${fx}" cy="${fy}" r="3" class="${cls}"/>`;
+                    svg.innerHTML += `<text x="${fx + 5}" y="${fy + 3}" fill="#ff0" font-size="9">${fileObj.name}</text>`;
+                    svg.innerHTML += `<line x1="${x}" y1="${y}" x2="${fx}" y2="${fy}" stroke="#ff0" stroke-width="0.5"/>`;
+                });
+            }
+
+            // update stats
+            document.getElementById("stats").innerHTML =
+                `ACTIVE_NODES: ${nodeCount}<br>
+         TOTAL_KEYS: ${keyCount}<br>
+         SYSTEM_LOAD: ${nodeCount > 0 ? (keyCount / nodeCount).toFixed(2) : 0}`;
+        }
+
+        // API
+        function refresh(highlight = null) {
+            fetch(API + "/state")
+                .then(res => res.json())
+                .then(data => draw(data, highlight));
+        }
+
+        function addNode() {
+            let name = document.getElementById("nodeName").value;
+
+            fetch(API + "/add_node", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name })
+            }).then(() => refresh());
+        }
+
+        function search() {
+            let key = document.getElementById("searchKey").value;
+            if (!key) return;
+
+            // Connect find feature to actually query the backend API
+            fetch(API + "/download?file=" + encodeURIComponent(key))
+                .then(res => res.json())
+                .then(res => {
+                    if (res.peers && res.peers.length > 0) {
+                        alert("✅ File '" + key + "' found in peers:\n" + res.peers.join(", "));
+                    } else {
+                        alert("❌ File '" + key + "' not found.");
+                    }
+                    refresh(key);
+                });
+        }
+
+        function upload() {
+            let file = document.getElementById("fileName").value;
+            let peer = document.getElementById("peerName").value;
+
+            fetch(API + "/upload", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ file, peer })
+            }).then(() => refresh());
+        }
+
+        function deleteFile() {
+            let file = document.getElementById("deleteFile").value;
+
+            fetch(API + "/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ file })
+            }).then(() => refresh());
+        }
+
+        function removeNode() {
+            let name = document.getElementById("removeNodeName").value;
+
+            fetch(API + "/remove_node", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name })
+            }).then(() => refresh());
+        }
+
+        // init
+        refresh();
+    </script>
+
+</body>
+
+</html>
