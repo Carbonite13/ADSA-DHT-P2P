@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+pydantic
+flask-cors
+# (Optional) For the new React frontend
+# vite
