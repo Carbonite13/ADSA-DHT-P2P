@@ -1,4 +1,4 @@
-# 🌌 ADSA-DHT-P2P: Distributed Hash Table & P2P Simulator
+# ADSA-DHT-P2P: Distributed Hash Table & P2P Simulator
 
 Welcome to the **ADSA-DHT-P2P** project! This is a high-performance simulation of a **Distributed Hash Table (DHT)** using **Consistent Hashing**, designed as a foundation for a Peer-to-Peer (P2P) file-sharing network.
 
@@ -6,7 +6,7 @@ It visualizes how data is distributed across a dynamic set of nodes, demonstrati
 
 ---
 
-## 🚀 Core Features
+## Core Features
 
 - **Consistent Hashing**: Implements a robust DHT where nodes and data keys are mapped to a 160-bit circular identifier space (SHA-1).
 - **Dynamic Node Management**: Add or remove nodes on the fly. The system automatically redistributes only the necessary keys to maintain balance.
@@ -16,7 +16,7 @@ It visualizes how data is distributed across a dynamic set of nodes, demonstrati
 
 ---
 
-## 🏗️ Data Structures & Architecture
+## Data Structures & Architecture
 
 ### 1. Consistent Hashing Logic
 The network is modeled as a circular "ring" from $0$ to $2^{160}-1$.
@@ -43,7 +43,7 @@ An abstraction layer for file operations.
 
 ---
 
-## 🧬 System Flow (Mermaid)
+## System Flow (Mermaid)
 
 ```mermaid
 graph TD
@@ -92,7 +92,7 @@ Open the provided local URL (usually `http://localhost:5173`).
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ### Modular Frontend
 The UI is built with **React** for true modularity:
@@ -102,7 +102,7 @@ The UI is built with **React** for true modularity:
 
 ---
 
-## 📈 Planned Improvements & Learning path
+## Planned Improvements & Learning path
 
 1. **Virtual Nodes**: Help balance the data distribution. To implement this, try hashing each node name multiple times (e.g., `Node1-v1`, `Node1-v2`) and mapping them all to the same physical node.
 2. **Replication**: Store data on the next $k$ nodes to ensure fault tolerance.
